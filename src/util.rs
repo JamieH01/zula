@@ -85,8 +85,9 @@ pub(crate) fn exec(
         if c != ' ' {
             if c == '"' {
                 quoted = !quoted;
+            } else {
+                string.push(c)
             }
-            string.push(c)
         } else if quoted == false {
             args.push(string.clone());
             string.clear();
