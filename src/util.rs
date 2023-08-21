@@ -77,7 +77,26 @@ pub(crate) fn exec(
     state: &mut ShellState,
     mut walked: Vec<String>,
 ) -> Result<(), ZulaError> {
-    let mut args: Vec<_> = raw.split_whitespace().map(|s| s.to_owned()).collect();
+    let mut args: Vec<String> =  vec![];
+    let mut quoted = false; 
+    let mut string = String::with_capacity(raw.len()); 
+
+    for c in raw.chars() {
+        if c != ' ' {
+            if c == '"' {
+                quoted = !quoted;
+            }
+            string.push(c)
+        } else if quoted == false {
+            args.push(string.clone());
+            string.clear();
+        } else {
+            string.push(c)
+        }
+    }
+    args.push(string);
+   
+
     if args.is_empty() {
         return Err(ZulaError::CommandEmpty);
     }
