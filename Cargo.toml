@@ -9,6 +9,6 @@ repository = "https://github.com/JamieH01/zula"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-zula-core = { path = "../zula-core", version = "0.0.8" }
+zula-core = { path = "../zula-core", version = "0.0.9" }
 termion = "2.0.1"
 dirs = "5.0.1"
