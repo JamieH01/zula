@@ -1,0 +1,14 @@
+[package]
+name = "zula"
+version = "0.0.7"
+edition = "2021"
+description = "a minimal and highly customizable terminal shell"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/JamieH01/zula"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+zula-core = { path = "../zula-core", version = "*" }
+termion = "2.0.1"
+dirs = "5.0.1"
