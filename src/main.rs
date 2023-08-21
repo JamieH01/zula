@@ -1,11 +1,14 @@
 #![deny(clippy::unwrap_used)]
-#![deny(clippy::expect_used)]
-use std::{fs, io::Write, vec};
+#![deny(clippy::unwrap_used)]
+#![warn(clippy::todo)]
+use std::{env, fs, io::Write, vec};
 
 use zula_core::{ShellState, ZulaError};
 
 mod util;
 use util::*;
+
+const VER: &str = "0.0.8";
 
 fn runtime(shell_state: &mut ShellState) -> Result<(), ZulaError> {
     write!(
@@ -14,7 +17,7 @@ fn runtime(shell_state: &mut ShellState) -> Result<(), ZulaError> {
         termion::clear::All,
         termion::cursor::Goto(1, 1)
     )?;
-    //write!(shell_state.stdout, "welcome to zula.\r\n")?;
+    write!(shell_state.stdout, "\x1b[38;5;93mwelcome to zula.\x1b[38;5;5m\r\ntype \"zula\" for more information\x1b[0m\r\n\r\n")?;
 
     shell_state.stdout.flush()?;
 
@@ -25,8 +28,17 @@ fn runtime(shell_state: &mut ShellState) -> Result<(), ZulaError> {
         match cmd.as_str() {
             "exit" => break 'l,
             "zula" => {
-                todo!("print ver info")
+                shell_state.history.push("zula".to_owned());
+                write!(
+                    shell_state.stdout,
+                    "\r\n\x1b[38;5;93mzula version\x1b[38;5;5m {VER}\x1b[0m\r\n"
+                )?;
+                write!(
+                    shell_state.stdout,
+                    "\r\nother commands:\r\n\x1b[38;5;5mzula cfg\r\n\x1b[0m"
+                )?;
             }
+            "zula reload" => {}
             "zula cfg" => {
                 shell_state.history.push(cmd.clone());
 
@@ -94,13 +106,24 @@ fn runtime(shell_state: &mut ShellState) -> Result<(), ZulaError> {
 fn init() -> Result<ShellState, ZulaError> {
     let mut shell_state = ShellState::new()?;
 
-    let cfg = dirs::config_dir()
-        .map(|mut p| {
-            p.push("zula/.zularc");
-            p
+    //FIXME
+    let cfg = if let Ok(mut s) = env::var("ZULA_CFG") {
+        if s.ends_with('/') {
+            s.push_str(".zularc");
+        } else {
+            s.push_str("/.zularc");
+        }
+        Some(s)
+    } else {
+        dirs::config_dir().map(|s| {
+            let mut s = s.to_string_lossy().to_string();
+            s.push_str("/zula/.zularc");
+            s
         })
-        .map(fs::read_to_string);
-    if let Some(Ok(raw)) = cfg {
+    };
+
+
+    if let Some(Ok(raw)) = cfg.map(fs::read_to_string) {
         for setting in raw.lines().filter(|l| l.starts_with('#')) {
             let args: Vec<_> = setting.split_whitespace().collect();
             match args[0] {

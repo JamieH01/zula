@@ -65,29 +65,53 @@ pub(crate) fn get_input(state: &mut ShellState) -> Result<String, ZulaError> {
     Ok(buf)
 }
 
+#[inline]
+pub(crate) fn home() -> Result<String, ZulaError> {
+    dirs::home_dir()
+        .ok_or(ZulaError::CommandEmpty)
+        .map(|s| s.to_string_lossy().to_string())
+}
+
 pub(crate) fn exec(
     raw: &str,
     state: &mut ShellState,
     mut walked: Vec<String>,
 ) -> Result<(), ZulaError> {
-    let mut args: Vec<_> = raw.split_whitespace().collect();
+    let mut args: Vec<_> = raw.split_whitespace().map(|s| s.to_owned()).collect();
     if args.is_empty() {
         return Err(ZulaError::CommandEmpty);
     }
 
     //aliases
-    if let Some(c) = state.config.aliases.get(args[0]) {
-        if !walked.contains(c) {
-            args.remove(0);
-            let cmd_raw = format!("{c}{}", args.join(" "));
-            walked.push(c.clone());
-            return exec(&cmd_raw, state, walked);
-        } else {
-            return Err(ZulaError::RecursiveAlias);
+    if args[0].starts_with('!') {
+        args[0].remove(0);
+    } else {
+        if let Some(c) = state.config.aliases.get(&args[0]) {
+            if !walked.contains(c) {
+                args.remove(0);
+                let cmd_raw = format!("{c}{}", args.join(" "));
+                walked.push(c.clone());
+                return exec(&cmd_raw, state, walked);
+            } else {
+                return Err(ZulaError::RecursiveAlias);
+            }
         }
     }
 
-    state.exec(args[0], &args[1..])?;
+    let home = home()?;
+    //TODO: this could be better maybe
+    args.iter_mut().for_each(|s| {
+        if s.starts_with('~') {
+            *s = s.replacen('~', &home, 1)
+        }
+    });
+    args.iter_mut().for_each(|s| {
+        if s.starts_with('\\') {
+            s.remove(0);
+        }
+    });
+
+    state.exec(&args[0], &args[1..])?;
 
     Ok(())
 }

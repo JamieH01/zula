@@ -2,8 +2,16 @@
 
 zula is a minimal and extendable terminal shell. It aims to streamline convenience tools for common shell interactions, via simple configuration tools and a (WIP) plugin system.
  
+## Features
+### Aliases
+zula features recursive aliasing. Aliases can expand into other aliases, which expand into more aliases...
+Commands can be escpaped with `!cmd` if you wish to use a program that shares the name of an alias.
+Note that aliases only apply to the first command parameter, they will not expand when used as arguments.
+### Binds
+zula allows you to bind any command to run when pressing `Alt + <key>`.
+
 ## Configuration
-zulas main configuration file is found in `$XDG_CONFIG_HOME/zula/.zularc`. It currently supports:
+zulas main configuration file is found in `$ZULA_CONFIG/.zularc`. If this enviroment variable is not set, it defaults to `$XDG_CONFIG_HOME/zula`. It currently supports:
 - `#alias` - set an alias word to be expanded into a command. 
 `#alias vi nvim .`
 - `#bind` - bind a command to be triggered when pressing `Alt + <key>`.
@@ -12,8 +20,7 @@ zulas main configuration file is found in `$XDG_CONFIG_HOME/zula/.zularc`. It cu
 
 ## Todos
 Here is a list of features I'm actively/plan to work on.
-- alias bypass
-- dedicated `zula` command for health and info
+- config sourcing
 - plugin system
 - simple scripts
 - applets once the plugin system is functional
