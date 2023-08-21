@@ -85,9 +85,8 @@ pub(crate) fn exec(
         if c != ' ' {
             if c == '"' {
                 quoted = !quoted;
-            } else {
-                string.push(c)
             }
+            string.push(c)
         } else if quoted == false {
             args.push(string.clone());
             string.clear();
@@ -96,6 +95,9 @@ pub(crate) fn exec(
         }
     }
     args.push(string);
+    //this is stupid
+    args.iter_mut().for_each(|s| *s = s.trim_matches('\"').to_owned());
+
 
     if args.is_empty() {
         return Err(ZulaError::CommandEmpty);
