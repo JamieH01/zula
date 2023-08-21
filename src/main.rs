@@ -8,7 +8,7 @@ use zula_core::{ShellState, ZulaError};
 mod util;
 use util::*;
 
-const VER: &str = "0.0.8";
+const VER: &str = env!("CARGO_PKG_VERSION");
 
 fn runtime(shell_state: &mut ShellState) -> Result<(), ZulaError> {
     write!(
@@ -35,10 +35,12 @@ fn runtime(shell_state: &mut ShellState) -> Result<(), ZulaError> {
                 )?;
                 write!(
                     shell_state.stdout,
-                    "\r\nother commands:\r\n\x1b[38;5;5mzula cfg\r\n\x1b[0m"
+                    "\r\nother commands:\r\n\x1b[38;5;5mzula cfg:\x1b[0m show config information\r\n\x1b[38;5;5mzula reload:\x1b[0m reload .zularc\r\n\x1b[0m"
                 )?;
             }
-            "zula reload" => {}
+            "zula reload" => {
+                gen_config(shell_state);
+            }
             "zula cfg" => {
                 shell_state.history.push(cmd.clone());
 
@@ -107,6 +109,12 @@ fn init() -> Result<ShellState, ZulaError> {
     let mut shell_state = ShellState::new()?;
 
     //FIXME
+    gen_config(&mut shell_state);
+
+    Ok(shell_state)
+}
+
+fn gen_config(shell_state: &mut ShellState) {
     let cfg = if let Ok(mut s) = env::var("ZULA_CFG") {
         if s.ends_with('/') {
             s.push_str(".zularc");
@@ -121,7 +129,6 @@ fn init() -> Result<ShellState, ZulaError> {
             s
         })
     };
-
 
     if let Some(Ok(raw)) = cfg.map(fs::read_to_string) {
         for setting in raw.lines().filter(|l| l.starts_with('#')) {
@@ -147,8 +154,6 @@ fn init() -> Result<ShellState, ZulaError> {
             }
         }
     }
-
-    Ok(shell_state)
 }
 
 //execption handling

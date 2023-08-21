@@ -77,9 +77,9 @@ pub(crate) fn exec(
     state: &mut ShellState,
     mut walked: Vec<String>,
 ) -> Result<(), ZulaError> {
-    let mut args: Vec<String> =  vec![];
-    let mut quoted = false; 
-    let mut string = String::with_capacity(raw.len()); 
+    let mut args: Vec<String> = vec![];
+    let mut quoted = false;
+    let mut string = String::with_capacity(raw.len());
 
     for c in raw.chars() {
         if c != ' ' {
@@ -95,7 +95,6 @@ pub(crate) fn exec(
         }
     }
     args.push(string);
-   
 
     if args.is_empty() {
         return Err(ZulaError::CommandEmpty);
