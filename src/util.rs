@@ -89,7 +89,7 @@ pub(crate) fn exec(
         if let Some(c) = state.config.aliases.get(&args[0]) {
             if !walked.contains(c) {
                 args.remove(0);
-                let cmd_raw = format!("{c}{}", args.join(" "));
+                let cmd_raw = format!("{c} {}", args.join(" "));
                 walked.push(c.clone());
                 return exec(&cmd_raw, state, walked);
             } else {
