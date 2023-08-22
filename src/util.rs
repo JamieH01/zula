@@ -96,8 +96,7 @@ pub(crate) fn exec(
     }
     args.push(string);
     //this is stupid
-    args.iter_mut().for_each(|s| *s = s.trim_matches('\"').to_owned());
-
+    args = args.iter().filter(|s| !s.is_empty()).map(|s| s.trim_matches('\"').to_owned()).collect();
 
     if args.is_empty() {
         return Err(ZulaError::CommandEmpty);

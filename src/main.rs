@@ -28,7 +28,6 @@ fn runtime(shell_state: &mut ShellState) -> Result<(), ZulaError> {
         match cmd.as_str() {
             "exit" => break 'l,
             "zula" => {
-                shell_state.history.push("zula".to_owned());
                 write!(
                     shell_state.stdout,
                     "\r\n\x1b[38;5;93mzula version\x1b[38;5;5m {VER}\x1b[0m\r\n"
@@ -42,7 +41,6 @@ fn runtime(shell_state: &mut ShellState) -> Result<(), ZulaError> {
                 gen_config(shell_state);
             }
             "zula cfg" => {
-                shell_state.history.push(cmd.clone());
 
                 let cfg = dirs::config_dir()
                     .map(|mut p| {
@@ -71,7 +69,6 @@ fn runtime(shell_state: &mut ShellState) -> Result<(), ZulaError> {
             }
             _ => {
                 //command execution
-                shell_state.history.push(cmd.clone());
 
                 shell_state.stdout.suspend_raw_mode()?;
                 match exec(
@@ -97,6 +94,7 @@ fn runtime(shell_state: &mut ShellState) -> Result<(), ZulaError> {
             }
         }
 
+        shell_state.history.push(cmd.clone());
         write!(shell_state.stdout, "\r\n")?;
         shell_state.stdout.flush()?;
     }
