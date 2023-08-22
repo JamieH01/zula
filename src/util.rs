@@ -77,7 +77,6 @@ pub(crate) fn exec(
 ) -> Result<(), ZulaError> {
     let mut args: Vec<String> = vec![];
     let mut quoted = false;
-    let raw = raw.trim();
     let mut scratch = String::with_capacity(raw.len());
 
     for c in raw.chars() {
@@ -97,7 +96,7 @@ pub(crate) fn exec(
     //this is stupid
     args.iter_mut().for_each(|s| *s = s.trim_matches('\"').to_owned());
 
-    if args.is_empty() {
+    if raw.is_empty() {
         return Err(ZulaError::CommandEmpty);
     }
 
@@ -115,6 +114,22 @@ pub(crate) fn exec(
         }
     }
 
+    let borrow = state as *mut ShellState; 
+
+    let mut hook = None;
+    if args[0].starts_with("plugin.") {
+        for plug in &state.config.plugins {
+            if plug.name() == &args[0][7..] {hook = Some(plug.clone())} 
+        } 
+    }
+    
+
+    if let Some(p) = hook {
+        state.stdout.suspend_raw_mode()?;
+        unsafe {p.call(borrow)}
+        state.stdout.activate_raw_mode()?;
+        return Ok(())
+    }
 
     let home = home()?;
     //TODO: this could be better maybe

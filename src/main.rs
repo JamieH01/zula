@@ -3,7 +3,7 @@
 #![warn(clippy::todo)]
 use std::{env, fs, io::Write, vec};
 
-use zula_core::{ShellState, ZulaError};
+use zula_core::{ShellState, ZulaError, PluginHook};
 
 mod util;
 use util::*;
@@ -66,6 +66,11 @@ fn runtime(shell_state: &mut ShellState) -> Result<(), ZulaError> {
                     )?;
                 }
 
+                write!(shell_state.stdout, "\nplugins loaded:\n\n")?; 
+                for plug in &shell_state.config.plugins {
+                    write!(shell_state.stdout, "{}\n", plug.name())?; 
+                }
+
                 shell_state.stdout.activate_raw_mode()?;
             }
             _ => {
@@ -73,7 +78,7 @@ fn runtime(shell_state: &mut ShellState) -> Result<(), ZulaError> {
 
                 shell_state.stdout.suspend_raw_mode()?;
                 match exec(
-                    &cmd,
+                    &cmd.trim(),
                     shell_state,
                     vec::Vec::with_capacity(shell_state.config.aliases.len()),
                 ) {
@@ -89,6 +94,7 @@ fn runtime(shell_state: &mut ShellState) -> Result<(), ZulaError> {
                         shell_state.stdout,
                         "alias is infinitely recursive, so it cannot be expanded"
                     )?,
+                    Err(ZulaError::InvalidPlugin) => write!(shell_state.stdout, "invalid plugin")?,
                     _ => {}
                 }
                 shell_state.stdout.activate_raw_mode()?;
@@ -107,27 +113,23 @@ fn runtime(shell_state: &mut ShellState) -> Result<(), ZulaError> {
 fn init() -> Result<ShellState, ZulaError> {
     let mut shell_state = ShellState::new()?;
 
-    //FIXME
     gen_config(&mut shell_state);
+
+    if let Ok(glob) = glob::glob(&format!("{}/*.so", cfg_dir("plugins").ok_or(ZulaError::InvalidDir)?)) {
+        for entry in glob {
+            if let Ok(path) = entry {
+                if let Ok(plug) = unsafe {PluginHook::new(path)} {
+                    shell_state.config.plugins.push(plug)
+                }
+            }
+        }
+    } 
 
     Ok(shell_state)
 }
 
 fn gen_config(shell_state: &mut ShellState) {
-    let cfg = if let Ok(mut s) = env::var("ZULA_CFG") {
-        if s.ends_with('/') {
-            s.push_str(".zularc");
-        } else {
-            s.push_str("/.zularc");
-        }
-        Some(s)
-    } else {
-        dirs::config_dir().map(|s| {
-            let mut s = s.to_string_lossy().to_string();
-            s.push_str("/zula/.zularc");
-            s
-        })
-    };
+    let cfg = cfg_dir(".zularc");
 
     if let Some(Ok(raw)) = cfg.map(fs::read_to_string) {
         for setting in raw.lines().filter(|l| l.starts_with('#')) {
@@ -153,6 +155,26 @@ fn gen_config(shell_state: &mut ShellState) {
             }
         }
     }
+}
+
+fn cfg_dir(sub:&str) -> Option<String> {
+    let cfg = if let Ok(mut s) = env::var("ZULA_CFG") {
+        if s.ends_with('/') {
+            s.push_str(sub);
+        } else {
+            s.push_str("/");
+            s.push_str(sub);
+        }
+        Some(s)
+    } else {
+        dirs::config_dir().map(|s| {
+            let mut s = s.to_string_lossy().to_string();
+            s.push_str("/zula/");
+            s.push_str(sub);
+            s
+        })
+    };
+    cfg
 }
 
 //execption handling
