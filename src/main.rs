@@ -41,7 +41,6 @@ fn runtime(shell_state: &mut ShellState) -> Result<(), ZulaError> {
                 gen_config(shell_state);
             }
             "zula cfg" => {
-
                 let cfg = dirs::config_dir()
                     .map(|mut p| {
                         p.push("zula/.zularc");
@@ -51,7 +50,9 @@ fn runtime(shell_state: &mut ShellState) -> Result<(), ZulaError> {
                 shell_state.stdout.suspend_raw_mode()?;
                 let cfg_loc = format!(
                     "{}/zula/.zularc\n\n",
-                    dirs::config_dir().unwrap().to_string_lossy()
+                    dirs::config_dir()
+                        .ok_or(ZulaError::InvalidDir)?
+                        .to_string_lossy()
                 );
 
                 if let Some(Ok(info)) = cfg {

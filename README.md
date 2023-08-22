@@ -10,6 +10,9 @@ Commands can be escaped with `!cmd` if you wish to use a program that shares the
 Note that aliases only apply to the first command parameter, they will not expand when used as arguments.
 ### Binds
 zula allows you to bind any command to run when pressing `Alt + <key>`.
+### Pipes
+Currently, the only supported operator in zula is `&&`, which will run each command sequentially and stop if one errors.
+
 
 ## Configuration
 zulas main configuration file is found in `$ZULA_CONFIG/.zularc`. If this enviroment variable is not set, it defaults to `$XDG_CONFIG_HOME/zula`. It currently supports:
@@ -26,13 +29,12 @@ zulas main configuration file is found in `$ZULA_CONFIG/.zularc`. If this enviro
 
 ## Todos
 Here is a list of features I'm actively/plan to work on.
-- config sourcing
 - plugin system
 - simple scripts
+- more command piping options
 - applets once the plugin system is functional
 
 ## Missing
 Here are some things that you may expect from a mature shell that zula is missing and may or may not be planned for the future.
-- chaining commands: using operators such as `&&` and `>>` to pipe programs together
 - auto suggestions
 - bash-esque scripting

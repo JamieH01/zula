@@ -1,7 +1,4 @@
-use std::{
-    io::{self, ErrorKind, Write},
-    process::Command,
-};
+use std::{io::{self, Write}, vec};
 use termion::event::Key;
 use termion::input::TermRead;
 
@@ -72,6 +69,7 @@ pub(crate) fn home() -> Result<String, ZulaError> {
         .map(|s| s.to_string_lossy().to_string())
 }
 
+
 pub(crate) fn exec(
     raw: &str,
     state: &mut ShellState,
@@ -79,24 +77,25 @@ pub(crate) fn exec(
 ) -> Result<(), ZulaError> {
     let mut args: Vec<String> = vec![];
     let mut quoted = false;
-    let mut string = String::with_capacity(raw.len());
+    let raw = raw.trim();
+    let mut scratch = String::with_capacity(raw.len());
 
     for c in raw.chars() {
         if c != ' ' {
             if c == '"' {
                 quoted = !quoted;
             }
-            string.push(c)
-        } else if quoted == false {
-            args.push(string.clone());
-            string.clear();
+            scratch.push(c)
+        } else if !quoted {
+            args.push(scratch.clone());
+            scratch.clear();
         } else {
-            string.push(c)
+            scratch.push(c)
         }
     }
-    args.push(string);
+    args.push(scratch);
     //this is stupid
-    args = args.iter().filter(|s| !s.is_empty()).map(|s| s.trim_matches('\"').to_owned()).collect();
+    args.iter_mut().for_each(|s| *s = s.trim_matches('\"').to_owned());
 
     if args.is_empty() {
         return Err(ZulaError::CommandEmpty);
@@ -105,18 +104,17 @@ pub(crate) fn exec(
     //aliases
     if args[0].starts_with('!') {
         args[0].remove(0);
-    } else {
-        if let Some(c) = state.config.aliases.get(&args[0]) {
-            if !walked.contains(c) {
-                args.remove(0);
-                let cmd_raw = format!("{c} {}", args.join(" "));
-                walked.push(c.clone());
-                return exec(&cmd_raw, state, walked);
-            } else {
-                return Err(ZulaError::RecursiveAlias);
-            }
+    } else if let Some(c) = state.config.aliases.get(&args[0]) {
+        if !walked.contains(c) {
+            args.remove(0);
+            let cmd_raw = format!("{c} {}", args.join(" "));
+            walked.push(c.clone());
+            return exec(&cmd_raw, state, walked);
+        } else {
+            return Err(ZulaError::RecursiveAlias);
         }
     }
+
 
     let home = home()?;
     //TODO: this could be better maybe
@@ -130,8 +128,23 @@ pub(crate) fn exec(
             s.remove(0);
         }
     });
+    
+    let mut cmds:Vec<&[String]> = Vec::with_capacity(args.len());
+    let mut start = 0;
 
-    state.exec(&args[0], &args[1..])?;
+    for i in 0..args.len() {
+        if args[i] == "&&" {
+            cmds.push(&args[start..i]);
+            start = i + 1;
+        }
+    }
+    
+    cmds.push(&args[start..]);
+    
 
+    for cmd in cmds {
+        state.exec(&cmd[0], &cmd[1..])?;
+    }
+    
     Ok(())
 }
