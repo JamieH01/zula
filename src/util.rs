@@ -116,20 +116,17 @@ pub(crate) fn exec(
 
     let borrow = state as *mut ShellState; 
 
-    let mut hook = None;
     if args[0].starts_with("plugin.") {
-        for plug in &state.config.plugins {
-            if plug.name() == &args[0][7..] {hook = Some(plug.clone())} 
-        } 
+        let hook = state.plugin_lookup(&args[0][7..]).ok();
+        if let Some(p) = hook {
+            state.stdout.suspend_raw_mode()?;
+            p.call(borrow);
+            state.stdout.activate_raw_mode()?;
+            return Ok(())
+        }
     }
     
 
-    if let Some(p) = hook {
-        state.stdout.suspend_raw_mode()?;
-        unsafe {p.call(borrow)}
-        state.stdout.activate_raw_mode()?;
-        return Ok(())
-    }
 
     let home = home()?;
     //TODO: this could be better maybe

@@ -3,7 +3,7 @@
 #![warn(clippy::todo)]
 use std::{env, fs, io::Write, vec};
 
-use zula_core::{ShellState, ZulaError, PluginHook};
+use zula_core::{ShellState, ZulaError};
 
 mod util;
 use util::*;
@@ -67,8 +67,8 @@ fn runtime(shell_state: &mut ShellState) -> Result<(), ZulaError> {
                 }
 
                 write!(shell_state.stdout, "\nplugins loaded:\n\n")?; 
-                for plug in &shell_state.config.plugins {
-                    write!(shell_state.stdout, "{}\n", plug.name())?; 
+                for plug in shell_state.plugin_names() {
+                    println!("{}\n", plug);
                 }
 
                 shell_state.stdout.activate_raw_mode()?;
@@ -118,9 +118,7 @@ fn init() -> Result<ShellState, ZulaError> {
     if let Ok(glob) = glob::glob(&format!("{}/*.so", cfg_dir("plugins").ok_or(ZulaError::InvalidDir)?)) {
         for entry in glob {
             if let Ok(path) = entry {
-                if let Ok(plug) = unsafe {PluginHook::new(path)} {
-                    shell_state.config.plugins.push(plug)
-                }
+                let _ = shell_state.load_plugin(path);
             }
         }
     } 

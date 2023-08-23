@@ -1,6 +1,6 @@
 # zula - Yet Another Shell
 
-zula is a minimal and extendable terminal shell. It aims to streamline convenience tools for common shell interactions, via simple configuration tools and a (WIP) plugin system.
+zula is a minimal and extendable terminal shell. It aims to streamline convenience tools for common shell interactions, via simple configuration tools and a plugin system.
  
 ## Features
 ### Aliases
@@ -12,6 +12,8 @@ Note that aliases only apply to the first command parameter, they will not expan
 zula allows you to bind any command to run when pressing `Alt + <key>`.
 ### Pipes
 Currently, the only supported operator in zula is `&&`, which will run each command sequentially and stop if one errors.
+### Plugins
+zula supports a plugin system. Place your `.so` files in `$ZULA_CONFIG/plugins` and run `zula cfg` to check what is loaded.
 
 
 ## Configuration
