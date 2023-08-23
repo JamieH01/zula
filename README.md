@@ -14,7 +14,7 @@ zula allows you to bind any command to run when pressing `Alt + <key>`.
 Currently, the only supported operator in zula is `&&`, which will run each command sequentially and stop if one errors.
 ### Plugins
 zula supports a plugin system. Place your `.so` files in `$ZULA_CONFIG/plugins` and run `zula cfg` to check what is loaded.
-
+See the sister crate [zula-core](https://crates.io/crates/zula-core) for more information.
 
 ## Configuration
 zulas main configuration file is found in `$ZULA_CONFIG/.zularc`. If this enviroment variable is not set, it defaults to `$XDG_CONFIG_HOME/zula`. It currently supports:

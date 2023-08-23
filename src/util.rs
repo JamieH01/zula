@@ -120,7 +120,10 @@ pub(crate) fn exec(
         let hook = state.plugin_lookup(&args[0][7..]).ok();
         if let Some(p) = hook {
             state.stdout.suspend_raw_mode()?;
-            p.call(borrow);
+            if let Err(e) = p.call(borrow) {
+                state.stdout.activate_raw_mode()?;
+                return Err(ZulaError::Opaque(e))
+            };
             state.stdout.activate_raw_mode()?;
             return Ok(())
         }

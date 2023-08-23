@@ -95,6 +95,7 @@ fn runtime(shell_state: &mut ShellState) -> Result<(), ZulaError> {
                         "alias is infinitely recursive, so it cannot be expanded"
                     )?,
                     Err(ZulaError::InvalidPlugin) => write!(shell_state.stdout, "invalid plugin")?,
+                    Err(ZulaError::Opaque(e)) => {write!(shell_state.stdout, "an external error occured: {e}")?}
                     _ => {}
                 }
                 shell_state.stdout.activate_raw_mode()?;
