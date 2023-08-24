@@ -144,6 +144,8 @@ pub(crate) fn exec(
         }
     });
     
+    let args:Vec<String> = args.into_iter().filter(|s| !s.is_empty()).collect();
+
     let mut cmds:Vec<&[String]> = Vec::with_capacity(args.len());
     let mut start = 0;
 
@@ -156,10 +158,12 @@ pub(crate) fn exec(
     
     cmds.push(&args[start..]);
     
-
+    
     for cmd in cmds {
         state.exec(&cmd[0], &cmd[1..])?;
     }
     
     Ok(())
 }
+
+

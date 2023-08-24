@@ -119,8 +119,11 @@ fn init() -> Result<ShellState, ZulaError> {
     if let Ok(glob) = glob::glob(&format!("{}/*.so", cfg_dir("plugins").ok_or(ZulaError::InvalidDir)?)) {
         for entry in glob {
             if let Ok(path) = entry {
-                let _ = shell_state.load_plugin(path);
-            }
+                match shell_state.load_plugin(path) {
+                    Ok(()) => {},
+                    Err(e) => write!(shell_state.stdout, "warning: plugin could not be loaded: {e}")?,
+                };
+            } 
         }
     } 
 
